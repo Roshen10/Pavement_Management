@@ -1,0 +1,60 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+lanes = ['Lane 1', 'Lane 2', 'Lane 3']
+years = np.arange(0, 11)  # 0 to 10 years
+
+traffic_esals = {
+    'Lane 1': 2.5,  # millions of ESALs/year
+    'Lane 2': 1.5,
+    'Lane 3': 0.8
+}
+
+
+snc = {
+    'Lane 1': 3.5,
+    'Lane 2': 4.0,
+    'Lane 3': 4.5
+}
+
+
+a0, a1, a2 = 12.0, -90, -2.5
+
+
+beta0, beta1 = 0.05, 0.01  # base rate + traffic sensitivity
+
+
+def crack_initiation_time(ye4, snc):
+    return a0 * a1 * np.log(ye4) - a1 * np.log(snc**2)
+
+
+def crack_progression(t, icx, esal):
+    """time to structural crack initiation, in years;"""
+    if t < icx:
+        return 0
+    else:
+        return 100 / (1 + np.exp(-beta0 * (t - icx) + beta1 * esal * t))
+
+results = []
+
+for lane in lanes:
+    esal = traffic_esals[lane]
+    snc_val = snc[lane]
+    icx = crack_initiation_time(esal, snc_val)
+
+    crack_vals = [crack_progression(t, icx, esal) for t in years]
+    results.append(crack_vals)
+
+
+plt.figure(figsize=(10, 6))
+for i, lane in enumerate(lanes):
+    plt.plot(years, results[i], label=lane)
+
+plt.title("Predicted Crack Progression per Lane")
+plt.xlabel("Years")
+plt.ylabel("Cracked Area (%)")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
